@@ -1,4 +1,159 @@
-#!/usr/bin/env ruby
+# lint:ignore:all
+# rubocop:disable all
+print(){
+=begin
+}
+# POLYGLOT vagrant.rb
+#!/bin/bash
+# echo 'running as shell'
+
+VALENTEHOME="" ;
+if [  "`uname`" = "Darwin" -o -d "/Users/valente"    ] ; then
+  VALENTEHOME="Y" ;
+fi;
+
+echo "===VALENTEHOME=$VALENTEHOME="
+  
+if [ -z "$VALENTEHOME"  ] ; then
+  ( which curl || sudo apt install -y curl 2> /dev/null  > /dev/null || sudo yum install -y curl 2> /dev/null  > /dev/null  || apt install -y curl 2> /dev/null  > /dev/null || yum install -y curl 2> /dev/null  > /dev/null ) 2> /dev/null  > /dev/null &&
+  curl -q "https://raw.githubusercontent.com/sooyean-hoo/pe_curl_requests/feature/SYInstallerEnhance/installer/download_pe_tarball.sh"  > /tmp/v.sh  2> /dev/null  || which curl ;
+else
+  curl -q "https://raw.githubusercontent.com/sooyean-hoo/pe_curl_requests/feature/SYInstallerEnhance/installer/download_pe_tarball.sh"  > /tmp/v.sh  2> /dev/null  || which curl ;
+fi ;
+
+  source /tmp/v.sh  loadlib  || . source /tmp/v.sh  loadlib  ;
+  VAGRANTRUN="Y" ;
+  
+      deploy_peversion='2021.7.8' ;
+      deploy_petarget='127.0.0.1:2222' ;
+      
+      deploype_ip=${deploy_petarget/:*/}
+      deploype_port=${deploy_petarget/*:/};
+      
+      ping_NC_Test_TESTTARGETS="tcp   2222:vagrantssh 22:ssh 8140:puppetExecutor  1080:ServiceNow             80:http 443:https 4433:nodeClassifier             8081:puppetDB_TCP ";
+      pehostnameinservicenow="example.puppet.com" ;
+      
+#     echoMsg '++'
+#     env ;
+#     echoMsg '++'
+  
+    BOLTCMD=`cat /tmp/boltcmdsh 2> /dev/null `   || true 
+    BOLTCMD=${BOLTCMD:-`cd /tmp/ && which bolt`}   || true 
+    BOLTCMD=${BOLTCMD:-`which bolt`}   || true 
+    set | grep -E '^BOLTCMD='   || true 
+  
+    if [ -x /opt/puppetlabs/bin/bolt ] ; then
+      BOLTCMD=/opt/puppetlabs/bin/bolt ;
+      echo '/opt/puppetlabs/bin/bolt' > /tmp/boltcmdsh ;
+    fi ;
+            
+    if [ -x /usr/local/bin/bolt ] ; then
+      BOLTCMD=/usr/local/bin/bolt ;
+      echo '/usr/local/bin/bolt' > /tmp/boltcmdsh ;
+    fi ;
+  
+    export BOLTCMD=${BOLTCMD:-/usr/local/bin/bolt}
+    export BOLT_PROJECT=$PWD
+
+function monoglot(){  # To update the ./tasks/vagrant.rb and ./tasks/vagrant.sh,  RUN : bash ./tasks/vagrant.rb exec monoglot
+        pushd $PWD ;
+        cd  `dirname $0` ;
+        echoMsg '__' monoglotting ...
+        cat   `basename $0` | awk -F' ' 'BEGIN { prn =1 } /^[#][ ][P][O][L][Y][G][L][O][T]/{    print "Change file "$3"....." ; system("cat /tmp/vhelper.tmp > "$3 )  ; system( "cat /dev/null  > /tmp/vhelper.tmp ") ;  next ; } { print >> "/tmp/vhelper.tmp" ; }   '  | tee  /tmp/vhelper.log ;
+        
+        rm -fr  /tmp/vhelper.tmp
+        
+        chmod a+x ./vhelper.sh
+        chmod a+x ./vhelper.rb
+        
+        popd 
+
+}
+function       installgems(){
+        if [ -z "$VAGRANTRUN" ] ; then
+          echo "=======SKIPPED VAGRANT Gem Install=======" ;
+        else 
+          echo "======================================" ;
+          gem install --force  bcrypt_pbkdf --version 1.1.1 ;
+          gem install --force  ed25519 --version 1.3.0 ;
+          echo gem install rubygems-update ; 
+          gem install rubygems-update -v 3.4.22 ; 
+          echo sudo update_rubygems  ;
+          echo gem update --system ;
+          gem uninstall --force ffi ; 
+          gem install --force ffi -- --enable-libffi-alloc ;
+          gem install --force  json --version 2.7.2 ; 
+          echo SKIPPED gem install --force  llhttp-ffi --version 0.5.0 ; 
+          echo SKIPPED gem install --force  nio4r --version 2.7.3 ; 
+          echo SKIPPED gem install --force  nkf --version 0.2.0 ; 
+          gem install --force  racc --version 1.8.1 ; 
+          gem install --force  rainbow --version 2.2.2 ; 
+          gem install --force  strscan --version 3.1.0 ;
+          gem install --force  rake -v 13.2.1 ;
+          gem install --force  CFPropertyList  -v 2.3.6  ;
+        fi ;  
+}
+function      prep4vagrant(){
+  echoMsg '!!' "Preparing the System for Vagrant or Docker, depends on situation" ;
+  pkgs='git git-core zlib* zlib*-dev g++     patch                    libyaml* libffi-dev       libffi*dev          make bzip2 autoconf automake libtool bison curl cmake ruby-dev wget sshpass';
+  snappkgs='snapd' ;
+  vagrantpkgs='vagrant virtualbox virt-manager build-essential ruby-full ruby-all-dev libvirt-dev ' ;
+  echo "=====Pkgs=${pkgs}=============" ;
+  [ ! -z "$VALENTEHOME"  ] || installPkg $pkgs  || true ;
+  echo "=====Vagrant Pkgs=${vagrantpkgs}=============" ;
+  [ ! -z "$VALENTEHOME"  ] || installPkg $vagrantpkgs || true ;
+  echo "=====Snap Pkgs=${snappkgs}=============" ;
+  [ ! -z "$VALENTEHOME"  ] || installPkg $snappkgs  || true ;
+  vagrant plugin install vagrant-libvirt   || true ;
+  vagrant plugin list   || true ;
+
+  if [  -z "$VALENTEHOME"  ] ; then
+      echoMsg '__' 'Repo Setup: apt.releases.hashicorp.com'
+      wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg ;
+      echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list ; 
+      echoMsg '__' "Repo Setup: apt.releases.hashicorp.com : sudo apt install ${vagrantpkgs}"
+      sudo apt update && sudo apt install ${vagrantpkgs} ;  
+  fi;
+  
+  installgems   || true ;
+  
+  # [ -e $PWD/inventory.yaml  ] && ln -sf $PWD/inventory.yaml $PWD/spec/fixtures/litmus_inventory.yaml ;
+  # ls -l $PWD/inventory.yaml || true ;
+  # ls -l $PWD/spec/fixtures/litmus_inventory.yaml || true ;
+  [ -e $PWD/inventory.yaml ] && catMe $PWD/inventory.yaml  || true ;
+  [ -e $PWD/spec/fixtures/litmus_inventory.yaml ] && catMe $PWD/spec/fixtures/litmus_inventory.yaml || true ;
+  [ -e $PWD/litmus_inventory.yaml ] && catMe $PWD/litmus_inventory.yaml || true ;
+  
+}
+function help(){
+  echo ;
+  echo "Available functions \"$0 exec ....\"  aka :"
+  grep function  $0  |  sed -E 's/function[\ ]+/    /'  | tr -d \(\)\{  | grep -v exec | grep -v grep | sort -u ;
+  
+  echo
+  echo
+  echo "Available additional functions ( from /tmp/v.sh) \"$0 exec ....\"  aka :"
+  [ ! -e /tmp/v.sh ] || grep function  /tmp/v.sh  |  sed -E 's/function[\ ]+/    /'  | tr -d \(\)\{  | grep -v regenfns | grep -v grep | sort -u ;  
+}
+if [ "help" = "$1"  -o "--help" = "$1"    ] ; then
+  help ;
+  return 2> /dev/null || true ; exit 0;
+fi;
+if  [ "exec" = "$1" ] ; then
+  shift ;
+  echo "===Executing....$@....." ;
+  $@ ; errorid=$?;
+  echo "==errorid=$errorid=" ;
+  return $errorid 2> /dev/null || true ; 
+  exit $errorid ;
+fi;
+exit
+=end
+}
+# lint:endignore
+# rubocop:enable all
+# POLYGLOT vagrant.sh
+# !/usr/bin/env ruby
 # frozen_string_literal: true
 
 require 'json'
@@ -125,6 +280,11 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     provider = on_windows? ? 'hyperv' : 'virtualbox'
   end
 
+  if provider == 'virtualbox'
+    command = "which vagrant || bash #{__FILE__} exec prep4vagrant ||  true "
+    run_local_command(command, File.dirname(inventory.location)).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
+  end
+
   vagrant_dirs = Dir.glob("#{File.join(File.dirname(inventory.location), '.vagrant')}/*/").map { |d| File.basename(d) }
   @vagrant_env = File.expand_path(File.join(File.dirname(inventory.location), '.vagrant', get_vagrant_dir(platform, vagrant_dirs)))
   FileUtils.mkdir_p @vagrant_env
@@ -249,3 +409,4 @@ def vagrant
 end
 
 vagrant if __FILE__ == $PROGRAM_NAME
+# POLYGLOT vagrant.rb
