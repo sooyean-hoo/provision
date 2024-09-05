@@ -281,10 +281,13 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     provider = on_windows? ? 'hyperv' : 'virtualbox'
   end
 
+  # Valente Additions - Start
   if provider == 'virtualbox'
+    password = "pie#{Time.now.nsec}piepiepiepiepiepiepiepiepieP5!"
     command = "bash #{__FILE__} exec prep4vagrant ||  true "
     run_local_command(command, File.dirname(inventory.location)).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
   end
+  # Valente Additions - End
 
   vagrant_dirs = Dir.glob("#{File.join(File.dirname(inventory.location), '.vagrant')}/*/").map { |d| File.basename(d) }
   @vagrant_env = File.expand_path(File.join(File.dirname(inventory.location), '.vagrant', get_vagrant_dir(platform, vagrant_dirs)))
