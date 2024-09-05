@@ -95,6 +95,9 @@ function       installgems(){
 }
 function      prep4vagrant(){
   echoMsg '!!' "Preparing the System for Vagrant or Docker, depends on situation" ;
+  
+  installgems   || true ;
+  
   pkgs='git git-core zlib* zlib*-dev g++     patch                    libyaml* libffi-dev       libffi*dev          make bzip2 autoconf automake libtool bison curl cmake ruby-dev wget sshpass';
   snappkgs='snapd' ;
   vagrantpkgs='vagrant virtualbox virt-manager build-essential ruby-full ruby-all-dev libvirt-dev ' ;
@@ -114,8 +117,6 @@ function      prep4vagrant(){
       echoMsg '__' "Repo Setup: apt.releases.hashicorp.com : sudo apt install ${vagrantpkgs}"
       sudo apt update && sudo apt install ${vagrantpkgs} ;  
   fi;
-  
-  installgems   || true ;
   
   # [ -e $PWD/inventory.yaml  ] && ln -sf $PWD/inventory.yaml $PWD/spec/fixtures/litmus_inventory.yaml ;
   # ls -l $PWD/inventory.yaml || true ;
@@ -281,7 +282,7 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
   end
 
   if provider == 'virtualbox'
-    command = "which vagrant || bash #{__FILE__} exec prep4vagrant ||  true "
+    command = "bash #{__FILE__} exec prep4vagrant ||  true "
     run_local_command(command, File.dirname(inventory.location)).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
   end
 
