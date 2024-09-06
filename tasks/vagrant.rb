@@ -295,7 +295,7 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     command = "bash #{__FILE__} exec prep4vagrant ||  true "
     o = run_local_command(command, File.dirname(inventory.location)).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
     puts "===command1=#{command}===\nOutput:\n#{o}"
-    logs << o.split('\n')
+    logs += o.split(%r{\[nr]})
   end
   # Valente Additions - End
 
@@ -317,10 +317,10 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     command = "bash #{__FILE__} exec makesshkey #{remote_config['identityfile'][0]} || true"
     o = run_local_command(command, @vagrant_env).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
     puts "===command2=#{command}===\nOutput:\n#{o}"
-    logs << o.split('\n')
+    logs += o.split(%r{\[nr]})
   end
   # Valente Additions - End
-  
+
   if platform_uses_ssh(platform)
     node = {
       'name' => node_name,
@@ -377,8 +377,8 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
   end
 
   node['vars'] ||= []
-  node['vars'] << { 'roles' => ['master']  }   
-  node['vars'] << { 'logs' => logs  }  
+  node['vars'] << { 'roles' => ['master'] }
+  node['vars'] << { 'logs' => logs }
 
   inventory.add(node, group_name).save
   { status: 'ok', node_name: node_name, node: node }
