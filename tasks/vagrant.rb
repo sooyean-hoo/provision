@@ -313,7 +313,7 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
 
   # Valente Additions - Start
   if provider == 'virtualbox'
-    remote_config['identityfile'] ||= ['/tmp/myownkey']
+    remote_config['identityfile'] = ['/tmp/myownkey'] # make it optional
     command = "bash #{__FILE__} exec makesshkey #{remote_config['identityfile'][0]} || true"
     o = run_local_command(command, @vagrant_env).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
     puts "===command2=#{command}===\nOutput:\n#{o}"
