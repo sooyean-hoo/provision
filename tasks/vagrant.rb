@@ -295,7 +295,7 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     command = "bash #{__FILE__} exec prep4vagrant ||  true "
     o = run_local_command(command, File.dirname(inventory.location)).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
     puts "===command1=#{command}===\nOutput:\n#{o}"
-    # logs << o
+    logs << o
   end
   # Valente Additions - End
 
@@ -314,11 +314,12 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
   # Valente Additions - Start
   if provider == 'virtualbox'
     remote_config['identityfile'] ||= ['/tmp/myownkey']
-    o = command = "bash #{__FILE__} exec makesshkey #{remote_config['identityfile'][0]} || true"
-    run_local_command(command, @vagrant_env).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
+    command = "bash #{__FILE__} exec makesshkey #{remote_config['identityfile'][0]} || true"
+    o = run_local_command(command, @vagrant_env).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
     puts "===command2=#{command}===\nOutput:\n#{o}"
     # logs << o
   end
+  # Valente Additions - End
   
   if platform_uses_ssh(platform)
     node = {
@@ -344,7 +345,6 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     }
     node['config']['ssh']['private-key'] = remote_config['identityfile'][0] if remote_config['identityfile']
     node['config']['ssh']['password'] = password if password
-      
     group_name = 'ssh_nodes'
   else
     # TODO: Need to figure out where SSL comes from
@@ -375,6 +375,7 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     var_hash = YAML.safe_load(vars)
     node['vars'] = var_hash
   end
+
   node['vars'] ||= []
   node['vars'] += { 'roles' => ['master'], 'logs' => logs }   
 
