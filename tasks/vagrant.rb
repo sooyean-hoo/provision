@@ -93,6 +93,13 @@ function       installgems(){
           gem install --force  CFPropertyList  -v 2.3.6  ;
         fi ;  
 }
+function      makesshkey(){
+  sshkey2use=${1:-/tmp/myownkey}
+  [ -e ${sshkey2use} ] || \
+    ssh-keygen -t ed25519 -f ${sshkey2use}      -P '' ; grep -H -n -v -E 'AALINEAANUMBER'  ${sshkey2use}* && \
+  \
+  cat ${sshkey2use}.pub | vagrant ssh default  --command "cat >> /home/vagrant/.ssh/authorized_keys" || echo "FAIL: vagrant ssh default.....date" ;
+}
 function      prep4vagrant(){
   echoMsg '!!' "Preparing the System for Vagrant or Docker, depends on situation" ;
   
@@ -301,6 +308,13 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
   remote_config = configure_remoting(platform, remote_config_file, password)
   node_name = "#{remote_config['hostname']}:#{remote_config['port']}"
 
+  # Valente Additions - Start
+  if provider == 'virtualbox'
+    remote_config['identityfile'] = '/tmp/myownkey'
+    command = "bash #{__FILE__} exec makesshkey #{remote_config['identityfile']} || true"
+    run_local_command(command, @vagrant_env).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
+  end
+  
   if platform_uses_ssh(platform)
     node = {
       'name' => node_name,
