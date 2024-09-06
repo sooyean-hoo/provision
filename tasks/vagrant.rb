@@ -99,11 +99,11 @@ function      makesshkey(){
     ssh-keygen -t ed25519 -f ${sshkey2use}      -P '' ; grep -H -n -v -E 'AALINEAANUMBER'  ${sshkey2use}* && \
   \
   cat ${sshkey2use}.pub | vagrant ssh default  --command "cat >> /home/vagrant/.ssh/authorized_keys" || echo "FAIL: vagrant ssh default.....date" ;
+  
+  env
 }
 function      prep4vagrant(){
   echoMsg '!!' "Preparing the System for Vagrant or Docker, depends on situation" ;
-  
-  installgems   || true ;
   
   pkgs='git git-core zlib* zlib*-dev g++     patch                    libyaml* libffi-dev       libffi*dev          make bzip2 autoconf automake libtool bison curl cmake ruby-dev wget sshpass';
   snappkgs='snapd' ;
@@ -116,6 +116,8 @@ function      prep4vagrant(){
   [ ! -z "$VALENTEHOME"  ] || installPkg $snappkgs  || true ;
   vagrant plugin install vagrant-libvirt   || true ;
   vagrant plugin list   || true ;
+
+  installgems   || true ;
 
   if [  -z "$VALENTEHOME"  ] ; then
       echoMsg '__' 'Repo Setup: apt.releases.hashicorp.com'
@@ -132,6 +134,7 @@ function      prep4vagrant(){
   [ -e $PWD/spec/fixtures/litmus_inventory.yaml ] && catMe $PWD/spec/fixtures/litmus_inventory.yaml || true ;
   [ -e $PWD/litmus_inventory.yaml ] && catMe $PWD/litmus_inventory.yaml || true ;
   
+  env
 }
 function help(){
   echo ;
@@ -193,7 +196,7 @@ end
 def generate_vagrantfile(file_path, platform, enable_synced_folder, provider, cpus, memory, hyperv_vswitch, hyperv_smb_username, hyperv_smb_password, box_url)
   synced_folder = 'config.vm.synced_folder ".", "/vagrant", disabled: true' unless enable_synced_folder
   if on_windows?
-    # Even though this is the default value in the metadata it isn't sent along if tthe parameter is unspecified for some reason.
+    # Even though this is the default value in the metadata it isn't sent along if the parameter is unspecified for some reason.
     network = "config.vm.network 'public_network', bridge: '#{hyperv_vswitch.nil? ? 'Default Switch' : hyperv_vswitch}'"
     if enable_synced_folder && !hyperv_smb_username.nil? && !hyperv_smb_password.nil?
       synced_folder = "config.vm.synced_folder '.', '/vagrant', type: 'smb', smb_username: '#{hyperv_smb_username}', smb_password: '#{hyperv_smb_password}'"
@@ -295,7 +298,7 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     command = "bash #{__FILE__} exec prep4vagrant ||  true "
     o = run_local_command(command, File.dirname(inventory.location)).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
     puts "===command1=#{command}===\nOutput:\n#{o}"
-    logs += o.split(%r{\[nr]})
+    logs += o.tr("\r", "\n").split("\n")
   end
   # Valente Additions - End
 
@@ -317,7 +320,7 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     command = "bash #{__FILE__} exec makesshkey #{remote_config['identityfile'][0]} || true"
     o = run_local_command(command, @vagrant_env).gsub('\n', "\n").gsub(%r{password: .+}, 'password: [redacted]')
     puts "===command2=#{command}===\nOutput:\n#{o}"
-    logs += o.split(%r{\[nr]})
+    logs += o.tr("\r", "\n").split("\n")
   end
   # Valente Additions - End
 
@@ -376,9 +379,9 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
     node['vars'] = var_hash
   end
 
-  node['vars'] ||= []
-  node['vars'] << { 'roles' => ['master'] }
-  node['vars'] << { 'logs' => logs }
+  node['vars'] ||= {}
+  node['vars']['roles'] = ['master']
+  node['vars']['logs' ] = logs if node['vars']['logs' ]
 
   inventory.add(node, group_name).save
   { status: 'ok', node_name: node_name, node: node }
