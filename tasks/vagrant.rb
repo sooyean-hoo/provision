@@ -7,6 +7,8 @@ print(){
 #!/bin/bash
 # echo 'running as shell'
 
+RUNNERWORKSPACE=/home/runner/work/
+  
 VALENTEHOME="" ;
 if [  "`uname`" = "Darwin" -o -d "/Users/valente"    ] ; then
   VALENTEHOME="Y" ;
@@ -135,6 +137,23 @@ function      prep4vagrant(){
   [ -e $PWD/litmus_inventory.yaml ] && catMe $PWD/litmus_inventory.yaml || true ;
   
   env
+  
+  find  "$RUNNERWORKSPACE" -iname metadata.json -maxdepth 3 | while read d ; do 
+    pushd $PWD ;  
+    cd  $( dirname $d )  ;
+    echo "===In=$PWD=bundle update====" ;
+    nohup bundle update & 
+    sleep 1 ;
+    pushd ; 
+  done ;
+
+  pushd $PWD ;  
+  cd  ${GITHUB_WORKSPACE}
+  echo "===In=$PWD=bundle update====" ;
+  nohup bundle update & 
+  pushd ; 
+  
+  sleep 10 ;
 }
 function help(){
   echo ;
@@ -381,7 +400,7 @@ def provision(platform, inventory, enable_synced_folder, provider, cpus, memory,
 
   node['vars'] ||= {}
   node['vars']['roles'] = ['master']
-  node['vars']['logs' ] = logs if node['vars']['logs' ]
+  node['vars']['logs' ] = logs # if node['vars']['logs' ]
 
   inventory.add(node, group_name).save
   { status: 'ok', node_name: node_name, node: node }
