@@ -104,6 +104,18 @@ function      makesshkey(){
   
   env
 }
+function      addsshkey(){
+    sshkey2use=${1:-/tmp/myownkey}
+
+    pushd  $PWD
+    vagrantdir=`vagrant global-status | grep default | grep running | cut -d\  -f8` || true ;
+    echo "===vagrantdir=$vagrantdir=";
+    pushd $PWD ;
+    cd ${vagrantdir} ;
+    echo "===In PWD=$(pwd)" ;
+    cat ${sshkey2use}.pub | vagrant ssh default  --command "cat >> /home/vagrant/.ssh/authorized_keys" || echo "FAIL: vagrant ssh default.....date" ;
+    popd
+}
 function      prep4vagrant(){
   echoMsg '!!' "Preparing the System for Vagrant or Docker, depends on situation" ;
   
